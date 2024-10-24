@@ -1,5 +1,6 @@
 # ZTCA training
 * https://customer.zscaler.com/path/zero-trust-architect
+* it seems that there's an intro course, then a newer/updated break down of each section that provides enriched/additional information.  I'll be simply updating these sections, so this isn't linear.
 
 # an overview of zero trust
 
@@ -100,7 +101,24 @@
 #### trusted versus untrusted device access paths
 ![](2024-10-24-04-57-18.png)
 
+#### attributes of access
+* determine the initiaing users:
+  * geography
+  * timing (when)
+  * device
+* determine the type of device:
+  * managed: meets a level of compliance (EDR agent, trusted client, certificate, FDE)
+  * unmanaged:
+
+#### application segmentation
+* granting access control via application segmentation policies is possible
+* first phase should be segmenting by critical applications
+* second phase should rely on machine learning to understand patterns
+
 ### element 3: where is the connection going?
+
+![](2024-10-24-06-20-26.png)
+
 * known apps:
   * externally managed (SaaS, internet) vs. internally managed (IaaS, PaaS, data center)
   * web or non-web (SSH, RDP)
@@ -115,9 +133,6 @@
     * internet/SaaS: automated
     * IaaS/PaaS: recommended
 
-### correlations are coming
-* Zscaler is working on making associatations between users and sites easier using AI triggering "recommended segmentation policy
-
 ## section 2: control content and access
 
 * three elements of control content and access:
@@ -129,7 +144,7 @@
 * application centric/proxy
 ![](2024-10-24-05-08-59.png)
 
-### element 4: asess dynamic risk (AI enabled)
+### element 4: assess dynamic risk (AI enabled)
 * determine the risk of access:
   * user/device:
     * behavior: malware downloads, access to malicious sites, c2 traffic, impossible travel, change in bandwidth/transaction volume, unusual app access
@@ -153,6 +168,7 @@
 * intel sources for the above include 40+ threat feeds (crowdstrike, MSFT, etc)
 
 #### inspection
+* zscaler **is** a proxy!  you will access the internet egress from Zscaler's data centers, and Zscaler will establish the connection for your client.
 * this includes SSL/TLS offloading
 * offered to both ZIA and ZPA
 
@@ -160,7 +176,7 @@
 * inline data protections
   * data loss prevention via AI
     * predefined, custom dictionaries
-    * advanced classifications: EDM, IDM, OCR
+    * advanced classifications: EDM (enterprise data manager), IDM (image data manager), OCR
     * enforce MSFT AIP tags
   * inline CASB to control access/usage
     * defined apps
@@ -179,6 +195,9 @@
 * accidental loss and oversharing
 * compliance issues
 * misconfigs lead to cloud data breach
+
+#### browser isolation
+* zscaler now has browser isolation
 
 ## section 3: enforce policy
 ![](2024-10-24-05-37-01.png)
@@ -233,3 +252,5 @@
 * prevent high risk actions (inbound or outbound)
 * provide application access with policies
   * via ZTNE, route traffic to internal apps or external apps
+
+* https://customer.zscaler.com/path/zero-trust-architect
