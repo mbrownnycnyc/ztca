@@ -51,8 +51,185 @@
     * This combination creates a "cloud" of apps, where app forwarding policies can be dynamically assigned to the zscaler client connector in order to grant access.
   * zscaler browser access: for unmanaged user devices with no possible agent install, DNS redirects using a CNAME to protect web-based apps (via HTTPS).
 * for network forwarding
-  * zscaler branch connector (on prem appliance)
+  * zscaler branch connector (on prem appliance): forward entire sites
+    * supports GRE or IPSEC, and integration with SD-WAN vendors
 * for cloud edge forwarding
-  * zscaler cloud connector
+  * zscaler cloud connector: similar to branch connector, but for cloud service provider footprint.
 
-* https://customer.zscaler.com/path/zero-trust-architect/zero-trust-architect/1393779/scorm/8mocuj4h333s
+# building an organizational architecture
+
+## section 1: verify identity & context
+
+* verifying identity via three elements:
+  * who is the initiator
+  * what are the attributes of the conncetion
+  * where is the initiator trying to go
+
+### element 1: who (declaring trusted identity)
+![](2024-10-24-04-51-38.png)
+
+* user: authentication: single, multi-factor
+* device: fingerprint, certificate, user agent string
+* workload: agent (process identification), location (network identifiers such as subnet, segment, ip addr, vpc, workload tags)
+* IoT: traffic fingerprint, certificate, location (as above)
+
+#### where do you get the above info?
+![](2024-10-24-05-03-33.png)
+
+* IdP (via API integrations via SAML or SCIM)
+* location and workload config: VLAN/VPC, network identifiers, cloud posture, local identifiers
+* site/infrastructure config: site functions, traffic path and flow, local identifiers
+
+#### how do you get the above info?
+* for users: determine the user repo (IAM), onboarding/offboarding process, how are you differentialing devices
+* for devices: key asset list, inventory (CMDB), location and network maps
+* for IoT: site knowledge, function maps, location and network maps
+
+### element 2: what is the access context?
+![](2024-10-24-04-56-11.png)
+
+* users:
+  * what department/group are they with?
+  * what is their location
+  * which type of device (corporate managed vs BYOD, pc/notebook/mobile/tablet)
+* workload:
+  * which environment (dev/test/prod) is it?
+* IoT:
+  * what type of device is it?  (camera, printer, sensors)
+
+#### trusted versus untrusted device access paths
+![](2024-10-24-04-57-18.png)
+
+### element 3: where is the connection going?
+* known apps:
+  * externally managed (SaaS, internet) vs. internally managed (IaaS, PaaS, data center)
+  * web or non-web (SSH, RDP)
+  * app categories
+  * decoy apps
+  * risk profile:
+    * internet/SaaS: domain risk, risk scoring (CASB), configurations (SSPM)
+    * IaaS/PaaS: configurations, vulns, user entitlements (CNAPP)
+* unknown and newly discovered apps:
+  * api-driven risk posture (CASB, CCPM, CNAPP)
+  * ml-driven categorization
+    * internet/SaaS: automated
+    * IaaS/PaaS: recommended
+
+### correlations are coming
+* Zscaler is working on making associatations between users and sites easier using AI triggering "recommended segmentation policy
+
+## section 2: control content and access
+
+* three elements of control content and access:
+  * Dynamic Risk Assessment
+  * Compromise Prevention
+  * Data Loss Prevention
+
+### traditional passthrough vs Zscaler proxy architecture
+* application centric/proxy
+![](2024-10-24-05-08-59.png)
+
+### element 4: asess dynamic risk (AI enabled)
+* determine the risk of access:
+  * user/device:
+    * behavior: malware downloads, access to malicious sites, c2 traffic, impossible travel, change in bandwidth/transaction volume, unusual app access
+    * posture: certificate, domain joined, av/edr installed, disk encryption
+  * workload/cloud infra/user entitlements:
+    * attack surface, vulns, misconfigs
+* review Cyber Risk Report
+  * ![](2024-10-24-05-13-08.png)
+* review specific user behavioral risk
+  * ![](2024-10-24-05-13-33.png)
+  * this can be added to policy logic
+
+### element 5: prevent compromise
+* inline threat protection
+  * block the known bad things: pattern, signature, destination
+  * quantify the unknown: destination knowledge and assessment, content knowledge and analysis, behavioral analysis (via sandboxing)
+* out-of-band threat protection (API scanning)
+  * discover malware in SaaS/PaaS/IaaS
+    * API scanning for malware
+    * sandbox unknown/suspicious files
+* intel sources for the above include 40+ threat feeds (crowdstrike, MSFT, etc)
+
+#### inspection
+* this includes SSL/TLS offloading
+* offered to both ZIA and ZPA
+
+### element 6: prevent data loss
+* inline data protections
+  * data loss prevention via AI
+    * predefined, custom dictionaries
+    * advanced classifications: EDM, IDM, OCR
+    * enforce MSFT AIP tags
+  * inline CASB to control access/usage
+    * defined apps
+    * 25 risk attributes per app
+  * file type controls to control file transfer
+    * file type, bandwidth, time of day controls
+* out-of-band data protection (API scanning)
+  * protect SaaS data:
+    * via CASB, SSPM (to determine what does this do), scan data at rest (DLP policies)
+  * protect IaaS/PaaS data:
+    * via CNAPP (to determine configurations, vulns, user entitlements), scan data at rest (DLP policies)
+* third party API integrations: ICAP for third party DLP products, MSFT information protection, other data protection integrations
+
+#### why protect data
+* data theft
+* accidental loss and oversharing
+* compliance issues
+* misconfigs lead to cloud data breach
+
+## section 3: enforce policy
+![](2024-10-24-05-37-01.png)
+
+* we've covered:
+  * section 1: the who is acting
+  * section 2: the what they are acting upon
+  * section 3: controlling how the *who* act upon *what* they are acting upon
+
+### element 7: policy
+* conditional access via policy actions
+
+#### policy actions
+* conditional block: block traffic
+* deceive: direct attacker to a decoy app
+* quarantine: ensure access is limited and protected
+* isolate: stream pixels to the browser, restricts the ability to download, copy and paste data
+* warn: alert users of potential risk, policy violation
+* steer: optimal and pre-defined path selection
+* prioritize: some app traffic is prioritized over others when there is congestion
+* conditional allow: allow traffic
+
+# connecting to applications
+
+![](2024-10-24-05-43-02.png)
+
+## older network design versus new network design
+* older design relies on sharing context with the application at the lower layers of the OSI model (VPN)
+* newer design relies on sharing context with the application at the higher layers of the OSI model (via identity and policy, above layer 4).  This is more flexible.
+
+## initiating connections to apps
+* securing external app access: outbound (SaaS/Internet based)
+  * new session established to the app on behalf of the user, device, IoT or workload
+  * the requester remains anonymous
+* securing access to internal apps (our data center, IaaS/PaaS)
+  * apps are treated as destinations, not network resources (like SaaS apps)
+  * apps are invisible (sit behind Zscaler controls) an can't be discovered from unauthorized sources (internet or connected networks)
+  * inside-out connections only, no inbound connections to apps (reduces attack surface)
+  * connections are made to apps, not networks (prevents lateral movement)
+  * app/workload segmentation without network segmentation
+    * user/device to app
+    * IoT to app
+    * workload to workload
+    * identity based micro-segmentation (process level)
+
+# summary
+* connection provided to zero trust exchange
+* establish identity of user/device/workload/IoT
+* establish the context of the user/device/workload/IoT based on attributes of the initiator
+* understand what the destination is and categorize it
+* assess the risk of the initiator and the internal actions of the session
+* prevent high risk actions (inbound or outbound)
+* provide application access with policies
+  * via ZTNE, route traffic to internal apps or external apps
